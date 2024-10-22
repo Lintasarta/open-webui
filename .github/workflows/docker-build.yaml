@@ -48,7 +48,7 @@ jobs:
           docker build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
-            -t ghcr.io/lintasarta/open-webui/open-webui:latest .
+            -t ghcr.io/lintasarta/open-webui:latest .
 
       # Build the Docker image
       - name: Build Docker image
@@ -56,9 +56,9 @@ jobs:
           docker build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
-            -t ghcr.io/lintasarta/open-webui/open-webui:latest .
+            -t ghcr.io/lintasarta/open-webui:latest .
 
       # Push the Docker image to GHCR
       - name: Push Docker image
         run: |
-          docker push ghcr.io/lintasarta/open-webui/open-webui:latest
+          docker push ghcr.io/lintasarta/open-webui:latest
