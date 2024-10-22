@@ -27,6 +27,9 @@ RUN npm ci
 
 COPY . .
 ENV APP_BUILD_HASH=${BUILD_HASH}
+ENV NODE_OPTIONS=--max-old-space-size=8192
+ENV VITE_BUILD_WORKERS=2
+
 RUN npm run build
 
 ######## WebUI backend ########
@@ -52,12 +55,12 @@ ENV ENV=prod \
     USE_RERANKING_MODEL_DOCKER=${USE_RERANKING_MODEL}
 
 ## Basis URL Config ##
-ENV OLLAMA_BASE_URL="/ollama" \
-    OPENAI_API_BASE_URL=""
+ENV OPENAI_API_BASE_URL="https://dekallm.cloudeka.ai/v1   "
 
 ## API Key and Security Config ##
-ENV OPENAI_API_KEY="" \
+ENV OPENAI_API_KEY="sk-G1_wkZ37sEmY4eqnGdcNig" \
     WEBUI_SECRET_KEY="" \
+    WEBUI_NAME="DekaWicara" \
     SCARF_NO_ANALYTICS=true \
     DO_NOT_TRACK=true \
     ANONYMIZED_TELEMETRY=false
