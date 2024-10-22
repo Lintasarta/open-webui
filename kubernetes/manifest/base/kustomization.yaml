@@ -1,5 +1,6 @@
 resources:
   - open-webui.yaml
+  - docker-registry-secret.yaml
   - webui-deployment.yaml
   - webui-service.yaml
   - webui-ingress.yaml
