@@ -26,8 +26,16 @@ spec:
             cpu: "1000m"
             memory: "1Gi"
         env:
-        - name: OLLAMA_BASE_URL
-          value: "http://ollama-service.open-webui.svc.cluster.local:11434"
+        - name: ENABLE_OPENAI_API
+          value: "True"
+        - name: OPENAI_API_KEY
+          value: sk-G1_wkZ37sEmY4eqnGdcNig
+        - name: OPENAI_API_BASE_URL
+          value: https://dekallm.cloudeka.ai/v1     
+        - name: WEBUI_NAME
+          value: DekaWicara  
+        - name: WEBUI_AUTH
+          value: 'False'
         tty: true
         volumeMounts:
         - name: webui-volume

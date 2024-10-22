@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"open-webui-deployment","namespace":"open-webui"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"open-webui"}},"template":{"metadata":{"labels":{"app":"open-webui"}},"spec":{"containers":[{"env":[{"name":"ENABLE_OPENAI_API","value":"True"},{"name":"OPENAI_API_KEY","value":"sk-G1_wkZ37sEmY4eqnGdcNig"},{"name":"OPENAI_API_BASE_URL","value":"https://dekallm.cloudeka.ai/v1"}],"image":"ghcr.io/open-webui/open-webui:main","name":"open-webui","ports":[{"containerPort":8080}],"resources":{"limits":{"cpu":"1000m","memory":"1Gi"},"requests":{"cpu":"500m","memory":"500Mi"}},"tty":true,"volumeMounts":[{"mountPath":"/app/backend/data","name":"webui-volume"}]}],"volumes":[{"hostPath":{"path":"./backend","type":"Directory"},"name":"webui-volume"}]}}}}
+  creationTimestamp: "2024-10-22T06:47:06Z"
+  generation: 1
+  name: open-webui-deployment
+  namespace: open-webui
+  resourceVersion: "3368276"
+  uid: 4de2840b-650c-41bf-a46c-8e720ce555a3
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: open-webui
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: open-webui
+    spec:
+      containers:
+      - env:
+        - name: ENABLE_OPENAI_API
+          value: "True"
+        - name: OPENAI_API_KEY
+          value: sk-G1_wkZ37sEmY4eqnGdcNig
+        - name: OPENAI_API_BASE_URL
+          value: https://dekallm.cloudeka.ai/v1
+        image: ghcr.io/open-webui/open-webui:main
+        imagePullPolicy: IfNotPresent
+        name: open-webui
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 500Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+        volumeMounts:
+        - mountPath: /app/backend/data
+          name: webui-volume
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - hostPath:
+          path: ./backend
+          type: Directory
+        name: webui-volume
+status:
+  conditions:
+  - lastTransitionTime: "2024-10-22T06:47:06Z"
+    lastUpdateTime: "2024-10-22T06:47:06Z"
+    message: Created new replica set "open-webui-deployment-74b5db9dbc"
+    reason: NewReplicaSetCreated
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2024-10-22T06:47:06Z"
+    lastUpdateTime: "2024-10-22T06:47:06Z"
+    message: Deployment does not have minimum availability.
+    reason: MinimumReplicasUnavailable
+    status: "False"
+    type: Available
+  - lastTransitionTime: "2024-10-22T06:47:06Z"
+    lastUpdateTime: "2024-10-22T06:47:06Z"
+    message: 'pods "open-webui-deployment-74b5db9dbc-f4v8c" is forbidden: violates
+      PodSecurity "baseline:latest": hostPath volumes (volume "webui-volume")'
+    reason: FailedCreate
+    status: "True"
+    type: ReplicaFailure
+  observedGeneration: 1
+  unavailableReplicas: 1
