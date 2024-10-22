@@ -56,9 +56,9 @@ jobs:
           docker build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
-            -t ghcr.io/${{ github.repository }}/open-webui:latest .
+            -t ghcr.io/lintasarta/open-webui/open-webui:latest .
 
       # Push the Docker image to GHCR
       - name: Push Docker image
         run: |
-          docker push ghcr.io/${{ github.repository }}/open-webui:latest
+          docker push ghcr.io/lintasarta/open-webui/open-webui:latest
