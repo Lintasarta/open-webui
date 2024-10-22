@@ -45,8 +45,10 @@ jobs:
       # Enable Docker BuildKit for caching support
       - name: Enable BuildKit
         run: |
-          echo "{ \"experimental\": true }" | sudo tee /etc/docker/daemon.json
-          export DOCKER_BUILDKIT=1
+          docker build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
+            -t ghcr.io/lintasarta/open-webui/open-webui:latest .
 
       # Build the Docker image
       - name: Build Docker image
