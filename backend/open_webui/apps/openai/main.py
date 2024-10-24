@@ -8,6 +8,7 @@ from typing import Literal, Optional, overload
 import aiohttp
 import requests
 from open_webui.apps.webui.models.models import Models
+from open_webui.apps.openai.utils import payload_has_image,process_image_payload
 from open_webui.config import (
     CACHE_DIR,
     CORS_ALLOW_ORIGIN,
@@ -118,7 +119,7 @@ async def update_openai_key(form_data: KeysUpdateForm, user=Depends(get_admin_us
 async def speech(request: Request, user=Depends(get_verified_user)):
     idx = None
     try:
-        idx = app.state.config.OPENAI_API_BASE_URLS.index("https://api.openai.com/v1")
+        idx = app.state.config.OPENAI_API_BASE_URLS.index("https://dekallm.cloudeka.ai/v1")
         body = await request.body()
         name = hashlib.sha256(body).hexdigest()
 
@@ -425,6 +426,12 @@ async def generate_chat_completion(
     if is_o1 and payload["messages"][0]["role"] == "system":
         payload["messages"][0]["role"] = "user"
 
+    # Check if payload has image and process it
+    if payload_has_image(payload):
+        payload = process_image_payload(payload)
+
+    with open("sample_payload.json","w") as f:
+        json.dump(payload,f,indent=3)
     # Convert the modified body back to JSON
     payload = json.dumps(payload)
 
@@ -441,7 +448,6 @@ async def generate_chat_completion(
     session = None
     streaming = False
     response = None
-
     try:
         session = aiohttp.ClientSession(
             trust_env=True, timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
