@@ -16,7 +16,7 @@ from open_webui.apps.retrieval.main import process_file, ProcessFileForm
 
 
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.utils.utils import get_admin_user, get_verified_user
+from open_webui.utils.utils import get_verified_user
 from open_webui.env import SRC_LOG_LEVELS
 
 
@@ -59,7 +59,7 @@ async def get_knowledge_items(
 
 
 @router.post("/create", response_model=Optional[KnowledgeResponse])
-async def create_new_knowledge(form_data: KnowledgeForm, user=Depends(get_admin_user)):
+async def create_new_knowledge(form_data: KnowledgeForm, user=Depends(get_verified_user)):
     knowledge = Knowledges.insert_new_knowledge(user.id, form_data)
 
     if knowledge:
@@ -108,7 +108,7 @@ async def get_knowledge_by_id(id: str, user=Depends(get_verified_user)):
 async def update_knowledge_by_id(
     id: str,
     form_data: KnowledgeUpdateForm,
-    user=Depends(get_admin_user),
+    user=Depends(get_verified_user),
 ):
     knowledge = Knowledges.update_knowledge_by_id(id=id, form_data=form_data)
 
@@ -140,7 +140,7 @@ class KnowledgeFileIdForm(BaseModel):
 def add_file_to_knowledge_by_id(
     id: str,
     form_data: KnowledgeFileIdForm,
-    user=Depends(get_admin_user),
+    user=Depends(get_verified_user),
 ):
     knowledge = Knowledges.get_knowledge_by_id(id=id)
     file = Files.get_file_by_id(form_data.file_id)
@@ -205,7 +205,7 @@ def add_file_to_knowledge_by_id(
 def update_file_from_knowledge_by_id(
     id: str,
     form_data: KnowledgeFileIdForm,
-    user=Depends(get_admin_user),
+    user=Depends(get_verified_user),
 ):
     knowledge = Knowledges.get_knowledge_by_id(id=id)
     file = Files.get_file_by_id(form_data.file_id)
@@ -255,7 +255,7 @@ def update_file_from_knowledge_by_id(
 def remove_file_from_knowledge_by_id(
     id: str,
     form_data: KnowledgeFileIdForm,
-    user=Depends(get_admin_user),
+    user=Depends(get_verified_user),
 ):
     knowledge = Knowledges.get_knowledge_by_id(id=id)
     file = Files.get_file_by_id(form_data.file_id)
@@ -319,7 +319,7 @@ def remove_file_from_knowledge_by_id(
 
 
 @router.post("/{id}/reset", response_model=Optional[KnowledgeResponse])
-async def reset_knowledge_by_id(id: str, user=Depends(get_admin_user)):
+async def reset_knowledge_by_id(id: str, user=Depends(get_verified_user)):
     try:
         VECTOR_DB_CLIENT.delete_collection(collection_name=id)
     except Exception as e:
@@ -338,7 +338,7 @@ async def reset_knowledge_by_id(id: str, user=Depends(get_admin_user)):
 
 
 @router.delete("/{id}/delete", response_model=bool)
-async def delete_knowledge_by_id(id: str, user=Depends(get_admin_user)):
+async def delete_knowledge_by_id(id: str, user=Depends(get_verified_user)):
     try:
         VECTOR_DB_CLIENT.delete_collection(collection_name=id)
     except Exception as e:

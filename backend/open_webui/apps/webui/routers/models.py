@@ -41,7 +41,7 @@ async def get_models(id: Optional[str] = None, user=Depends(get_verified_user)):
 async def add_new_model(
     request: Request,
     form_data: ModelForm,
-    user=Depends(get_admin_user),
+    user=Depends(get_verified_user),
 ):
     if form_data.id in request.app.state.MODELS:
         raise HTTPException(
@@ -70,7 +70,7 @@ async def update_model_by_id(
     request: Request,
     id: str,
     form_data: ModelForm,
-    user=Depends(get_admin_user),
+    user=Depends(get_verified_user),
 ):
     model = Models.get_model_by_id(id)
     if model:
