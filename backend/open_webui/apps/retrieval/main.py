@@ -38,6 +38,7 @@ from open_webui.apps.retrieval.web.tavily import search_tavily
 from open_webui.apps.retrieval.utils import (
     get_embedding_function,
     get_model_path,
+    get_reranking_function,
     query_collection,
     query_collection_with_hybrid_search,
     query_doc,
@@ -170,50 +171,23 @@ def update_embedding_model(
     embedding_model: str,
     auto_update: bool = False,
 ):
-    if embedding_model and app.state.config.RAG_EMBEDDING_ENGINE == "":
-        import sentence_transformers
+    # if embedding_model and app.state.config.RAG_EMBEDDING_ENGINE == "":
+    #     import sentence_transformers
 
-        app.state.sentence_transformer_ef = sentence_transformers.SentenceTransformer(
-            get_model_path(embedding_model, auto_update),
-            device=DEVICE_TYPE,
-            trust_remote_code=RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE,
-        )
-    else:
-        app.state.sentence_transformer_ef = None
+    #     app.state.sentence_transformer_ef = sentence_transformers.SentenceTransformer(
+    #         get_model_path(embedding_model, auto_update),
+    #         device=DEVICE_TYPE,
+    #         trust_remote_code=RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE,
+    #     )
+    # else:
+    app.state.sentence_transformer_ef = None
 
 
 def update_reranking_model(
     reranking_model: str,
     auto_update: bool = False,
 ):
-    if reranking_model:
-        if any(model in reranking_model for model in ["jinaai/jina-colbert-v2"]):
-            try:
-                from open_webui.apps.retrieval.models.colbert import ColBERT
-
-                app.state.sentence_transformer_rf = ColBERT(
-                    get_model_path(reranking_model, auto_update),
-                    env="docker" if DOCKER else None,
-                )
-            except Exception as e:
-                log.error(f"ColBERT: {e}")
-                app.state.sentence_transformer_rf = None
-                app.state.config.ENABLE_RAG_HYBRID_SEARCH = False
-        else:
-            import sentence_transformers
-
-            try:
-                app.state.sentence_transformer_rf = sentence_transformers.CrossEncoder(
-                    get_model_path(reranking_model, auto_update),
-                    device=DEVICE_TYPE,
-                    trust_remote_code=RAG_RERANKING_MODEL_TRUST_REMOTE_CODE,
-                )
-            except:
-                log.error("CrossEncoder error")
-                app.state.sentence_transformer_rf = None
-                app.state.config.ENABLE_RAG_HYBRID_SEARCH = False
-    else:
-        app.state.sentence_transformer_rf = None
+    app.state.sentence_transformer_rf = None
 
 
 update_embedding_model(
@@ -234,6 +208,12 @@ app.state.EMBEDDING_FUNCTION = get_embedding_function(
     app.state.config.OPENAI_API_KEY,
     app.state.config.OPENAI_API_BASE_URL,
     app.state.config.RAG_EMBEDDING_OPENAI_BATCH_SIZE,
+)
+
+app.state.RERANKING_FUNCTION = get_reranking_function(
+    app.state.config.RAG_RERANKING_MODEL,
+    app.state.config.OPENAI_API_KEY,
+    app.state.config.OPENAI_API_BASE_URL
 )
 
 app.add_middleware(
@@ -290,6 +270,10 @@ async def get_reraanking_config(user=Depends(get_admin_user)):
     return {
         "status": True,
         "reranking_model": app.state.config.RAG_RERANKING_MODEL,
+        "openai_config": {
+            "url": app.state.config.OPENAI_API_BASE_URL,
+            "key": app.state.config.OPENAI_API_KEY,
+        },
     }
 
 
@@ -356,6 +340,7 @@ async def update_embedding_config(
 
 
 class RerankingModelUpdateForm(BaseModel):
+    openai_config: Optional[OpenAIConfigForm] = None
     reranking_model: str
 
 
@@ -371,6 +356,12 @@ async def update_reranking_config(
 
         update_reranking_model(app.state.config.RAG_RERANKING_MODEL, True)
 
+        app.state.RERANKING_FUNCTION = get_reranking_function(
+            app.state.config.RAG_RERANKING_MODEL,
+            app.state.config.OPENAI_API_KEY,
+            app.state.config.OPENAI_API_BASE_URL
+        )
+        
         return {
             "status": True,
             "reranking_model": app.state.config.RAG_RERANKING_MODEL,
@@ -636,7 +627,7 @@ def save_docs_to_vector_db(
     split: bool = True,
     add: bool = False,
 ) -> bool:
-    log.info(f"save_docs_to_vector_db {docs} {collection_name}")
+    log.info(f"save_docs_to_vector_db {collection_name}")
 
     # Check if entries with the same hash (metadata.hash) already exist
     if metadata and "hash" in metadata:
@@ -1164,7 +1155,7 @@ def query_doc_handler(
                 query=form_data.query,
                 embedding_function=app.state.EMBEDDING_FUNCTION,
                 k=form_data.k if form_data.k else app.state.config.TOP_K,
-                reranking_function=app.state.sentence_transformer_rf,
+                reranking_function=app.state.RERANKING_FUNCTION,
                 r=(
                     form_data.r if form_data.r else app.state.config.RELEVANCE_THRESHOLD
                 ),
@@ -1204,7 +1195,7 @@ def query_collection_handler(
                 query=form_data.query,
                 embedding_function=app.state.EMBEDDING_FUNCTION,
                 k=form_data.k if form_data.k else app.state.config.TOP_K,
-                reranking_function=app.state.sentence_transformer_rf,
+                reranking_function=app.state.RERANKING_FUNCTION,
                 r=(
                     form_data.r if form_data.r else app.state.config.RELEVANCE_THRESHOLD
                 ),

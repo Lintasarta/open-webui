@@ -506,7 +506,7 @@ async def chat_completion_files_handler(body) -> tuple[dict, dict[str, list]]:
             messages=body["messages"],
             embedding_function=retrieval_app.state.EMBEDDING_FUNCTION,
             k=retrieval_app.state.config.TOP_K,
-            reranking_function=retrieval_app.state.sentence_transformer_rf,
+            reranking_function=retrieval_app.state.RERANKING_FUNCTION,
             r=retrieval_app.state.config.RELEVANCE_THRESHOLD,
             hybrid_search=retrieval_app.state.config.ENABLE_RAG_HYBRID_SEARCH,
         )

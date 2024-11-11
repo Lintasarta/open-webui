@@ -75,7 +75,7 @@ def query_doc(
             limit=k,
         )
 
-        log.info(f"query_doc:result {result}")
+        # log.info(f"query_doc:result {result}")
         return result
     except Exception as e:
         print(e)
@@ -92,7 +92,6 @@ def query_doc_with_hybrid_search(
 ) -> dict:
     try:
         result = VECTOR_DB_CLIENT.get(collection_name=collection_name)
-
         bm25_retriever = BM25Retriever.from_texts(
             texts=result.documents[0],
             metadatas=result.metadatas[0],
@@ -108,6 +107,7 @@ def query_doc_with_hybrid_search(
         ensemble_retriever = EnsembleRetriever(
             retrievers=[bm25_retriever, vector_search_retriever], weights=[0.5, 0.5]
         )
+
         compressor = RerankCompressor(
             embedding_function=embedding_function,
             top_n=k,
@@ -126,7 +126,7 @@ def query_doc_with_hybrid_search(
             "metadatas": [[d.metadata for d in result]],
         }
 
-        log.info(f"query_doc_with_hybrid_search:result {result}")
+        # log.info(f"query_doc_with_hybrid_search:result {result}")
         return result
     except Exception as e:
         raise e
@@ -301,7 +301,21 @@ def get_embedding_function(
 
         return lambda query: generate_multiple(query, func)
 
+def get_reranking_function(
+    reranking_model,
+    openai_key,
+    openai_url,
+):
+        func = lambda query,passages: generate_openai_rerank(
+            model=reranking_model,
+            query=query,
+            passages_list=passages,
+            key=openai_key,
+            url=openai_url,
+        )
 
+
+        return func
 def get_rag_context(
     files,
     messages,
@@ -448,7 +462,7 @@ def generate_openai_embeddings(
     model: str,
     text: Union[str, list[str]],
     key: str,
-    url: str = "https://api.openai.com/v1",
+    url: str = "https://dekallm.cloudeka.ai/v1",
 ):
     if isinstance(text, list):
         embeddings = generate_openai_batch_embeddings(model, text, key, url)
@@ -459,7 +473,7 @@ def generate_openai_embeddings(
 
 
 def generate_openai_batch_embeddings(
-    model: str, texts: list[str], key: str, url: str = "https://api.openai.com/v1"
+    model: str, texts: list[str], key: str, url: str = "https://dekallm.cloudeka.ai/v1"
 ) -> Optional[list[list[float]]]:
     try:
         r = requests.post(
@@ -480,6 +494,29 @@ def generate_openai_batch_embeddings(
         print(e)
         return None
 
+def generate_openai_rerank(url,model,query,passages_list,key):
+    passages = [{"text":passage} for passage in passages_list]
+    payload = {
+        "model": model,
+        "query": {"text": query},
+        "passages": passages
+        # "truncate": "NONE"
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": f"Bearer {key}"
+    }
+
+    response = requests.post(f"{url}/ranking", json=payload, headers=headers)
+    data = response.json()
+    scores = [ranking['logit'] for ranking in data['rankings']]
+    # Logging scores for each passage
+    for i, (passage, score) in enumerate(zip(passages_list, scores)):
+        # Print just the first 20 characters of the passage for brevity
+        log.info(f"Ranking results:\nPassage {i}: {passage[:20]}... Score: {score}")
+    
+    return scores
 
 import operator
 from typing import Optional, Sequence
@@ -507,8 +544,9 @@ class RerankCompressor(BaseDocumentCompressor):
         reranking = self.reranking_function is not None
 
         if reranking:
-            scores = self.reranking_function.predict(
-                [(query, doc.page_content) for doc in documents]
+            scores = self.reranking_function(
+                query,
+                [doc.page_content for doc in documents]
             )
         else:
             from sentence_transformers import util
@@ -518,8 +556,7 @@ class RerankCompressor(BaseDocumentCompressor):
                 [doc.page_content for doc in documents]
             )
             scores = util.cos_sim(query_embedding, document_embedding)[0]
-
-        docs_with_scores = list(zip(documents, scores.tolist()))
+        docs_with_scores = list(zip(documents, scores))
         if self.r_score:
             docs_with_scores = [
                 (d, s) for d, s in docs_with_scores if s >= self.r_score
@@ -536,3 +573,5 @@ class RerankCompressor(BaseDocumentCompressor):
             )
             final_results.append(doc)
         return final_results
+
+
