@@ -104,37 +104,38 @@ class KnowledgeTable:
             except Exception:
                 return None
 
-    def get_knowledge_items(self) -> list[KnowledgeModel]:
+    def get_knowledge_items(self,user_id) -> list[KnowledgeModel]:
         with get_db() as db:
             return [
                 KnowledgeModel.model_validate(knowledge)
                 for knowledge in db.query(Knowledge)
+                .filter_by(user_id=user_id)
                 .order_by(Knowledge.updated_at.desc())
                 .all()
             ]
 
-    def get_knowledge_by_id(self, id: str) -> Optional[KnowledgeModel]:
+    def get_knowledge_by_id(self, id: str,user_id: str) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                knowledge = db.query(Knowledge).filter_by(id=id).first()
+                knowledge = db.query(Knowledge).filter_by(id=id,user_id=user_id).first()
                 return KnowledgeModel.model_validate(knowledge) if knowledge else None
         except Exception:
             return None
 
     def update_knowledge_by_id(
-        self, id: str, form_data: KnowledgeUpdateForm, overwrite: bool = False
+        self, id: str, user_id: str, form_data: KnowledgeUpdateForm, overwrite: bool = False, 
     ) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                knowledge = self.get_knowledge_by_id(id=id)
-                db.query(Knowledge).filter_by(id=id).update(
+                knowledge = self.get_knowledge_by_id(id=id,user_id=user_id)
+                db.query(Knowledge).filter_by(id=id,user_id=user_id).update(
                     {
                         **form_data.model_dump(exclude_none=True),
                         "updated_at": int(time.time()),
                     }
                 )
                 db.commit()
-                return self.get_knowledge_by_id(id=id)
+                return self.get_knowledge_by_id(id=id,user_id=user_id)
         except Exception as e:
             log.exception(e)
             return None
