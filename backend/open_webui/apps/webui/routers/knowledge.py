@@ -37,7 +37,7 @@ async def get_knowledge_items(
     id: Optional[str] = None, user=Depends(get_verified_user)
 ):
     if id:
-        knowledge = Knowledges.get_knowledge_by_id(id=id,user_id=user.id)
+        knowledge = Knowledges.get_knowledge_by_id(id=id,user_info=user)
 
         if knowledge:
             return knowledge
@@ -49,7 +49,7 @@ async def get_knowledge_items(
     else:
         return [
             KnowledgeResponse(**knowledge.model_dump())
-            for knowledge in Knowledges.get_knowledge_items(user.id)
+            for knowledge in Knowledges.get_knowledge_items(user_info=user)
         ]
 
 
@@ -82,7 +82,7 @@ class KnowledgeFilesResponse(KnowledgeResponse):
 
 @router.get("/{id}", response_model=Optional[KnowledgeFilesResponse])
 async def get_knowledge_by_id(id: str, user=Depends(get_verified_user)):
-    knowledge = Knowledges.get_knowledge_by_id(id=id,user_id=user.id)
+    knowledge = Knowledges.get_knowledge_by_id(id=id,user_info=user)
 
     if knowledge:
         file_ids = knowledge.data.get("file_ids", []) if knowledge.data else []
@@ -142,7 +142,7 @@ def add_file_to_knowledge_by_id(
     form_data: KnowledgeFileIdForm,
     user=Depends(get_verified_user),
 ):
-    knowledge = Knowledges.get_knowledge_by_id(id=id,user_id=user.id)
+    knowledge = Knowledges.get_knowledge_by_id(id=id,user_info=user)
     file = Files.get_file_by_id(form_data.file_id)
     if not file:
         raise HTTPException(
@@ -174,7 +174,7 @@ def add_file_to_knowledge_by_id(
             data["file_ids"] = file_ids
 
             knowledge = Knowledges.update_knowledge_by_id(
-                id=id, form_data=KnowledgeUpdateForm(data=data),user_id=user.id
+                id=id, form_data=KnowledgeUpdateForm(data=data),user_info=user
             )
 
             if knowledge:
@@ -207,7 +207,7 @@ def update_file_from_knowledge_by_id(
     form_data: KnowledgeFileIdForm,
     user=Depends(get_verified_user),
 ):
-    knowledge = Knowledges.get_knowledge_by_id(id=id,user_id=user.id)
+    knowledge = Knowledges.get_knowledge_by_id(id=id,user_info=user)
     file = Files.get_file_by_id(form_data.file_id)
     if not file:
         raise HTTPException(
@@ -257,7 +257,7 @@ def remove_file_from_knowledge_by_id(
     form_data: KnowledgeFileIdForm,
     user=Depends(get_verified_user),
 ):
-    knowledge = Knowledges.get_knowledge_by_id(id=id,user_id=user.id)
+    knowledge = Knowledges.get_knowledge_by_id(id=id,user_info=user)
     file = Files.get_file_by_id(form_data.file_id)
     if not file:
         raise HTTPException(
@@ -286,7 +286,7 @@ def remove_file_from_knowledge_by_id(
             data["file_ids"] = file_ids
 
             knowledge = Knowledges.update_knowledge_by_id(
-                id=id, form_data=KnowledgeUpdateForm(data=data),user_id=user.id
+                id=id, form_data=KnowledgeUpdateForm(data=data),user_info=user
             )
 
             if knowledge:
@@ -327,7 +327,7 @@ async def reset_knowledge_by_id(id: str, user=Depends(get_verified_user)):
         pass
 
     knowledge = Knowledges.update_knowledge_by_id(
-        id=id, form_data=KnowledgeUpdateForm(data={"file_ids": []})
+        id=id, form_data=KnowledgeUpdateForm(data={"file_ids": []}),user_info=user
     )
     return knowledge
 

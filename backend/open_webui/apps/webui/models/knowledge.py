@@ -104,38 +104,49 @@ class KnowledgeTable:
             except Exception:
                 return None
 
-    def get_knowledge_items(self,user_id) -> list[KnowledgeModel]:
+    def get_knowledge_items(self,user_info) -> list[KnowledgeModel]:
         with get_db() as db:
-            return [
-                KnowledgeModel.model_validate(knowledge)
-                for knowledge in db.query(Knowledge)
-                .filter_by(user_id=user_id)
-                .order_by(Knowledge.updated_at.desc())
-                .all()
-            ]
+            if user_info.role=="admin":
+                return [
+                    KnowledgeModel.model_validate(knowledge)
+                    for knowledge in db.query(Knowledge)
+                    .order_by(Knowledge.updated_at.desc())
+                    .all()
+                ]
+            else:
+                return [
+                    KnowledgeModel.model_validate(knowledge)
+                    for knowledge in db.query(Knowledge)
+                    .filter_by(user_id=user_info.id)
+                    .order_by(Knowledge.updated_at.desc())
+                    .all()
+                ]                
 
-    def get_knowledge_by_id(self, id: str,user_id: str) -> Optional[KnowledgeModel]:
+    def get_knowledge_by_id(self, id: str,user_info) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                knowledge = db.query(Knowledge).filter_by(id=id,user_id=user_id).first()
+                if user_info.role=="admin":
+                    knowledge = db.query(Knowledge).filter_by(id=id).first()
+                else:
+                    knowledge = db.query(Knowledge).filter_by(id=id,user_id=user_info.id).first()
                 return KnowledgeModel.model_validate(knowledge) if knowledge else None
         except Exception:
             return None
 
     def update_knowledge_by_id(
-        self, id: str, user_id: str, form_data: KnowledgeUpdateForm, overwrite: bool = False, 
+        self, id: str, user_info, form_data: KnowledgeUpdateForm, overwrite: bool = False, 
     ) -> Optional[KnowledgeModel]:
         try:
             with get_db() as db:
-                knowledge = self.get_knowledge_by_id(id=id,user_id=user_id)
-                db.query(Knowledge).filter_by(id=id,user_id=user_id).update(
+                knowledge = self.get_knowledge_by_id(id=id,user_info=user_info)
+                db.query(Knowledge).filter_by(id=id).update(
                     {
                         **form_data.model_dump(exclude_none=True),
                         "updated_at": int(time.time()),
                     }
                 )
                 db.commit()
-                return self.get_knowledge_by_id(id=id,user_id=user_id)
+                return self.get_knowledge_by_id(id=id,user_info=user_info)
         except Exception as e:
             log.exception(e)
             return None
