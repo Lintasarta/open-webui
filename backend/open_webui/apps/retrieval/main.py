@@ -675,6 +675,7 @@ def save_docs_to_vector_db(
                 return True
 
         log.info(f"adding to collection {collection_name}")
+        log.info("Creating embedding...")
         embedding_function = get_embedding_function(
             app.state.config.RAG_EMBEDDING_ENGINE,
             app.state.config.RAG_EMBEDDING_MODEL,
@@ -687,7 +688,7 @@ def save_docs_to_vector_db(
         embeddings = embedding_function(
             list(map(lambda x: x.replace("\n", " "), texts))
         )
-
+        log.info(f"Embedding succesfully created!")
         items = [
             {
                 "id": str(uuid.uuid4()),
@@ -697,12 +698,12 @@ def save_docs_to_vector_db(
             }
             for idx, text in enumerate(texts)
         ]
-
+        log.info("Inserting to vectordb...")
         VECTOR_DB_CLIENT.insert(
             collection_name=collection_name,
             items=items,
         )
-
+        log.info("Successed inserting to vectordb!")
         return True
     except Exception as e:
         log.exception(e)
