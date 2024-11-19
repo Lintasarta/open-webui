@@ -404,6 +404,8 @@ async def generate_chat_completion(
             "email": user.email,
             "role": user.role,
         }
+    else:
+        payload["user"] = user.email
 
     url = app.state.config.OPENAI_API_BASE_URLS[idx]
     key = app.state.config.OPENAI_API_KEYS[idx]
@@ -430,8 +432,8 @@ async def generate_chat_completion(
     if payload_has_image(payload):
         payload = process_image_payload(payload)
 
-    with open("sample_payload.json","w") as f:
-        json.dump(payload,f,indent=3)
+    # with open("sample_payload.json","w") as f:
+    #     json.dump(payload,f,indent=3)
     # Convert the modified body back to JSON
     payload = json.dumps(payload)
 
