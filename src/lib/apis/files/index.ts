@@ -5,20 +5,34 @@ export const uploadFile = async (token: string, file: File) => {
 	data.append('file', file);
 	let error = null;
 
+	// Set a timeout for the fetch request
+	const timeout = 300000; // 10 seconds
+	const controller = new AbortController();
+	const signal = controller.signal;
+
+	setTimeout(() => {
+		controller.abort();
+	}, timeout);
+
 	const res = await fetch(`${WEBUI_API_BASE_URL}/files/`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
 			authorization: `Bearer ${token}`
 		},
-		body: data
+		body: data,
+		signal: signal // Pass the signal to the fetch request
 	})
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();
 		})
 		.catch((err) => {
-			error = err.detail;
+			if (err.name === 'AbortError') {
+				error = 'Request timed out';
+			} else {
+				error = err.detail;
+			}
 			console.log(err);
 			return null;
 		});
