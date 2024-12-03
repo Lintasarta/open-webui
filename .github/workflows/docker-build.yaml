@@ -35,7 +35,7 @@ jobs:
           install: true
       # Debugging step to print the username
       - name: Debug Username
-        run: echo "username is ${{ github.actor }}"
+        run: echo "username is ${{ github.actor }} and password is ${{ secrets.GH_PAT }}"
 
       # Log in to GitHub Container Registry (GHCR)
       - name: Log in to GitHub Container Registry
