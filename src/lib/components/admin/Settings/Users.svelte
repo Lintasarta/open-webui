@@ -14,8 +14,8 @@
 
 	let defaultModelId = '';
 
-	let blacklistEnabled = false;
-	let blacklistModels = [''];
+	let whitelistEnabled = false;
+	let whitelistModels = [''];
 	let permissions = {
 		chat: {
 			deletion: true,
@@ -29,8 +29,8 @@
 
 		const res = await getModelFilterConfig(localStorage.token);
 		if (res) {
-			blacklistEnabled = res.enabled;
-			blacklistModels = res.models.length > 0 ? res.models : [''];
+			whitelistEnabled = res.enabled;
+			whitelistModels = res.models.length > 0 ? res.models : [''];
 		}
 
 		defaultModelId = $config.default_models ? $config?.default_models.split(',')[0] : '';
@@ -44,9 +44,7 @@
 
 		await setDefaultModels(localStorage.token, defaultModelId);
 		await updateUserPermissions(localStorage.token, permissions);
-		const allModels = $models;
-		const whitelistedModels = allModels.map(model => model.name).filter(modelName => !blacklistModels.includes(modelName));
-		await updateModelFilterConfig(localStorage.token, blacklistEnabled, whitelistedModels);
+		await updateModelFilterConfig(localStorage.token, whitelistEnabled, whitelistModels);
 		saveHandler();
 
 		await config.set(await getBackendConfig());
@@ -103,11 +101,11 @@
 				<button
 					class="p-1 px-3 text-xs flex rounded transition"
 					on:click={() => {
-						permissions.chat.edit = !(permissions?.chat?.edit ?? true);
+						permissions.chat.editing = !(permissions?.chat?.editing ?? true);
 					}}
 					type="button"
 				>
-					{#if permissions?.chat?.edit ?? true}
+					{#if permissions?.chat?.editing ?? true}
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 16 16"
@@ -213,16 +211,16 @@
 				<div class=" space-y-1">
 					<div class="mb-2">
 						<div class="flex justify-between items-center text-xs">
-							<div class=" text-xs font-medium">{$i18n.t('Model Blacklisting')}</div>
+							<div class=" text-xs font-medium">{$i18n.t('Model Whitelisting')}</div>
 
-							<Switch bind:state={blacklistEnabled} />
+							<Switch bind:state={whitelistEnabled} />
 						</div>
 					</div>
 
-					{#if blacklistEnabled}
+					{#if whitelistEnabled}
 						<div>
 							<div class=" space-y-1.5">
-								{#each blacklistModels as modelId, modelIdx}
+								{#each whitelistModels as modelId, modelIdx}
 									<div class="flex w-full">
 										<div class="flex-1 mr-2">
 											<select
@@ -244,8 +242,8 @@
 												class="px-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-900 dark:text-white rounded-lg transition"
 												type="button"
 												on:click={() => {
-													if (blacklistModels.at(-1) !== '') {
-														blacklistModels = [...blacklistModels, ''];
+													if (whitelistModels.at(-1) !== '') {
+														whitelistModels = [...whitelistModels, ''];
 													}
 												}}
 											>
@@ -265,8 +263,8 @@
 												class="px-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-900 dark:text-white rounded-lg transition"
 												type="button"
 												on:click={() => {
-													blacklistModels.splice(modelIdx, 1);
-													blacklistModels = blacklistModels;
+													whitelistModels.splice(modelIdx, 1);
+													whitelistModels = whitelistModels;
 												}}
 											>
 												<svg
@@ -285,8 +283,8 @@
 
 							<div class="flex justify-end items-center text-xs mt-1.5 text-right">
 								<div class=" text-xs font-medium">
-									{blacklistModels.length}
-									{$i18n.t('Model(s) Blacklisted')}
+									{whitelistModels.length}
+									{$i18n.t('Model(s) Whitelisted')}
 								</div>
 							</div>
 						</div>
