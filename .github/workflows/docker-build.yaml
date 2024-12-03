@@ -33,6 +33,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           install: true
+      # Debugging step to print the username
+      - name: Debug Username
+        run: echo "username is ${{ github.actor }}"
 
       # Log in to GitHub Container Registry (GHCR)
       - name: Log in to GitHub Container Registry
@@ -42,9 +45,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GH_PAT }}
 
-      # Debugging step to print the username
-      - name: Debug Username
-        run: echo "username is ${{ github.actor }}"
         
       - name: Build and Push Docker image
         run: |
