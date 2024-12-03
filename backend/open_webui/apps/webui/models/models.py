@@ -146,6 +146,13 @@ class ModelsTable:
         except Exception:
             return None
 
+    def get_model_by_user_id(self, user_id: str) -> Optional[ModelModel]:
+        try:
+            with get_db() as db:
+                return [ModelModel.model_validate(model) for model in db.query(Model).filter_by(user_id=user_id)]
+        except Exception:
+            return None
+        
     def update_model_by_id(self, id: str, model: ModelForm) -> Optional[ModelModel]:
         try:
             with get_db() as db:

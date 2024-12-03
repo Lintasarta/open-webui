@@ -9,13 +9,13 @@
 
 	import { onMount, getContext, tick } from 'svelte';
 
-	import { WEBUI_NAME, mobile, models, settings, user } from '$lib/stores';
+	import { WEBUI_NAME, mobile, models,user, settings } from '$lib/stores';
 	import { addNewModel, deleteModelById, getModelInfos, updateModelById } from '$lib/apis/models';
 
 	import { deleteModel } from '$lib/apis/ollama';
 	import { goto } from '$app/navigation';
 
-	import { getModels } from '$lib/apis';
+	import { getModels, getUserModels } from '$lib/apis';
 
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
 	import ModelMenu from './Models/ModelMenu.svelte';
@@ -40,6 +40,7 @@
 	let sortable = null;
 	let searchValue = '';
 
+
 	const deleteModelHandler = async (model) => {
 		console.log(model.info);
 		if (!model?.info) {
@@ -57,7 +58,7 @@
 			toast.success($i18n.t(`Deleted {{name}}`, { name: model.id }));
 		}
 
-		await models.set(await getModels(localStorage.token));
+		await models.set(await getUserModels(localStorage.token, user.id));
 		_models = $models;
 	};
 
@@ -144,7 +145,7 @@
 			toast.success($i18n.t(`Model {{name}} is now at the top`, { name: info.id }));
 		}
 
-		await models.set(await getModels(localStorage.token));
+		await models.set(await getUserModels(localStorage.token,user.id));
 		_models = $models;
 	};
 
@@ -180,7 +181,7 @@
 			);
 		}
 
-		await models.set(await getModels(localStorage.token));
+		await models.set(await getUserModels(localStorage.token,user.id));
 		_models = $models;
 	};
 
@@ -230,12 +231,16 @@
 		}
 
 		await tick();
-		await models.set(await getModels(localStorage.token));
+		await models.set(await getUserModels(localStorage.token,user.id));
 	};
 
 	onMount(async () => {
 		// Legacy code to sync localModelfiles with models
-		_models = $models;
+		const userValue = $user;
+		// _models = await getUserModels(localStorage.token, userValue.id);
+		_models = $models
+		console.log("MODELS:",_models);
+		
 		localModelfiles = JSON.parse(localStorage.getItem('modelfiles') ?? '[]');
 
 		if (localModelfiles) {
@@ -571,7 +576,7 @@
 						}
 					}
 
-					await models.set(await getModels(localStorage.token));
+					await models.set(await getUserModels(localStorage.token,user.id));
 					_models = $models;
 				};
 

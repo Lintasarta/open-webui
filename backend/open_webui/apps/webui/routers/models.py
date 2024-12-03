@@ -31,6 +31,28 @@ async def get_models(id: Optional[str] = None, user=Depends(get_verified_user)):
     else:
         return Models.get_all_models()
 
+@router.get("/{id}")
+async def get_model_by_userid(id: str, user=Depends(get_verified_user)):
+    try:
+        custom_models = Models.get_model_by_user_id(user_id=user.id)
+        models=[]
+        for custom_model in custom_models:
+            models.append(
+                {
+                    "id": custom_model.id,
+                    "name": custom_model.name,
+                    "object": "model",
+                    "created": custom_model.created_at,
+                    "owned_by": "",
+                    "info": custom_model.model_dump()
+                }
+            )
+        return {"data":models}
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
 
 ############################
 # AddNewModel
@@ -99,6 +121,6 @@ async def update_model_by_id(
 
 
 @router.delete("/delete", response_model=bool)
-async def delete_model_by_id(id: str, user=Depends(get_admin_user)):
+async def delete_model_by_id(id: str, user=Depends(get_verified_user)):
     result = Models.delete_model_by_id(id)
     return result
