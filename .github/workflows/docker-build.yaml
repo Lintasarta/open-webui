@@ -42,6 +42,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GH_PAT }}
 
+      # Debugging step to print the username
+      - name: Debug Username
+        run: echo "username is ${{ github.actor }}"
+        
       - name: Build and Push Docker image
         run: |
           docker build \
