@@ -21,23 +21,25 @@ spec:
         ports:
         - containerPort: 8080
         resources:
-          requests:
-            cpu: "500m"
-            memory: "500Mi"
           limits:
-            cpu: "1000m"
-            memory: "1Gi"
+            cpu: "32"
+            memory: 128Gi
+          requests:
+            cpu: "8"
+            memory: 16Gi
         env:
         - name: ENABLE_OPENAI_API
           value: "True"
         - name: OPENAI_API_KEY
           value: sk-G1_wkZ37sEmY4eqnGdcNig
         - name: OPENAI_API_BASE_URL
-          value: https://dekallm.cloudeka.ai/v1     
+          value: http://10.250.30.225:4000/v1
         - name: WEBUI_NAME
-          value: DekaWicara  
+          value: DekaWicara
         - name: WEBUI_AUTH
-          value: 'False'
+          value: "True"
+        - name: AIOHTTP_CLIENT_TIMEOUT
+          value: "300"
         tty: true
         volumeMounts:
         - name: webui-volume
@@ -45,4 +47,4 @@ spec:
       volumes:
       - name: webui-volume
         persistentVolumeClaim:
-          claimName: open-webui-pvc          
+          claimName: dekawicara-pvc         
